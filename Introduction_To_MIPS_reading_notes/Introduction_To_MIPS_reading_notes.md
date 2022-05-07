@@ -558,7 +558,7 @@ main:
 	syscall
 	move $s0, $v0
 	
-	# 打印新的一行
+	# 打印值
 	jal PrintNewLine
 	la $a0, result
 	jal PrintString
@@ -611,3 +611,191 @@ Exit:
 ```
 
 ## 3.6 多输入参数的PrintInt子程序
+
+要打印字符串的地址存储在\$a0中，要打印的整数值存储在\$a1中。
+
+```assembly
+# 程序文件：Program5-4.asm
+# 作者：Charles Kann
+# 用途：实现并调用名为PrintInt的子程序
+.text
+main:
+	# 从用户那里读取并输入一个值
+	la $a0, prompt
+	jal PrintString
+	li $v0, 5
+	syscall
+	move $s0, $v0
+	
+	# 打印值
+	jal PrintNewLine
+	la $a0, result
+	move $a1, $s0
+	jal PrintInt
+	
+	# 调用Exit来退出
+	jal Exit
+
+.data
+	prompt: .asciiz "Please enter an integer: "
+	result: .asciiz "\nYou entered: "
+
+# 子程序：PrintNewLine
+# 作者：Charles Kann
+# 用途：向用户控制台输出一个新的行
+# 输入：None
+# 返回：None
+.text
+PrintNewLine:
+	li $v0, 4
+	la $a0, __PNL_newline
+	syscall
+	jr $ra
+.data
+	__PNL_newline: .asciiz "\n"
+
+# 子程序：PrintInt
+# 作者：Charles Kann
+# 用途：向用户控制台输出
+# 输入：$a0, $a1
+# 返回：None
+.text
+PrintInt:
+	# 打印字符串
+	li $v0, 4
+	syscall
+	
+	# 打印整数
+	move $a0, $a1
+	li $v0, 1
+	syscall
+	
+	# 返回
+	jr $ra
+
+# 子程序：PrintString
+# 作者：Charles Kann
+# 用途：向用户控制台输出一个字符串
+# 输入：$a0
+# 返回：None
+.text
+PrintString:
+	addi $v0, $zero, 4
+	syscall
+	jr $ra
+
+# 子程序：Exit
+# 作者：Charles Kann
+# 用途：退出程序
+# 输入：None
+# 返回：None
+.text
+Exit:
+	li $v0, 10
+	syscall
+
+```
+
+## 3.7 返回值的PromptInt子程序
+
+```assembly
+# 程序文件：Program5-5.asm
+# 作者：Charles Kann
+# 用途：实现返回值的PromptInt
+.text
+main:
+	# 从用户那里读取并输入一个值
+	la $a0, prompt
+	jal PromptInt
+	move $s0, $v0
+	
+	# 打印值
+	jal PrintNewLine
+	la $a0, result
+	move $a1, $s0
+	jal PrintInt
+	
+	# 调用Exit来退出
+	jal Exit
+
+.data
+	prompt: .asciiz "Please enter an integer: "
+	result: .asciiz "\nYou entered: "
+
+# 子程序：PrintNewLine
+# 作者：Charles Kann
+# 用途：向用户控制台输出一个新的行
+# 输入：None
+# 返回：None
+.text
+PrintNewLine:
+	li $v0, 4
+	la $a0, __PNL_newline
+	syscall
+	jr $ra
+.data
+	__PNL_newline: .asciiz "\n"
+
+# 子程序：PrintInt
+# 作者：Charles Kann
+# 用途：向用户控制台输出
+# 输入：$a0, $a1
+# 返回：None
+.text
+PrintInt:
+	# 打印字符串
+	li $v0, 4
+	syscall
+	
+	# 打印整数
+	move $a0, $a1
+	li $v0, 1
+	syscall
+	
+	# 返回
+	jr $ra
+
+# 子程序：PromptInt
+# 作者：Charles Kann
+# 用途：提示用户输入一个整数并返回
+# 输入：$a0
+# 返回：$v0
+.text
+PromptInt:
+	# 打印提示
+	li $v0, 4
+	syscall
+	
+	# 读取整数值
+	move $a0, $a1
+	li $v0, 5
+	syscall
+	
+	# 返回
+	jr $ra
+
+# 子程序：PrintString
+# 作者：Charles Kann
+# 用途：向用户控制台输出一个字符串
+# 输入：$a0
+# 返回：None
+.text
+PrintString:
+	addi $v0, $zero, 4
+	syscall
+	jr $ra
+
+# 子程序：Exit
+# 作者：Charles Kann
+# 用途：退出程序
+# 输入：None
+# 返回：None
+.text
+Exit:
+	li $v0, 10
+	syscall
+
+```
+
+## 3.8 创建utils.asm文件
+
