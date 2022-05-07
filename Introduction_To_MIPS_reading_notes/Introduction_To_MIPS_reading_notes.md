@@ -200,3 +200,414 @@ jump操作符是最明显的不符合3-地址格式的预算符，branch和store
 
 ### 2.2.1 加法运算符
 
+- `add`，整数
+  - 格式：`add Rd, Rs, Rt`
+  - 含义：`Rd <- Rs + Rt`
+- `addi`，整数
+  - 格式：`addi Rt, Rs, 立即数`
+  - 含义：`Rt <- Rs + 立即数`
+- `addu`，无符号或整二进制数
+  - 格式：`addu Rd, Rs, Rt`
+  - 含义：`Rd <- Rs + Rt`
+
+- `addiu`，无符号或整二进制数
+  - 格式：`addiu Rt, Rs, 立即数`
+  - 含义：`Rt <- Rs + 立即数`
+
+还有加法的伪运算符，
+
+- `add`使用16位立即数，也就是`addi`的简写。
+  - 格式：`add Rt, Rs, 立即数`
+  - 含义：`Rt <- Rs + 立即数`
+  - 翻译：`addi Rt, Rs, 立即数`
+- `add*`带32位立即数。在真正的I型指令中，立即数最高只能是16位，超过的话需要分两步加载：先用`lui`加载高16位，再用`ori`加载低16位。
+  - 示例：`addi Rt, Rs, (32 bit)立即数`
+  - 翻译：
+    - `lui $at10, (upper 16 bits) 立即数`
+    - `ori $at, $at, (lower 16 bits) 立即数`
+    - `add Rt, Rs, $at11`
+
+### 2.2.2 加法示例
+
+```assembly
+# 程序文件：Program3-1.asm
+# 作者：Charles Kann
+# 用途：加法运算符
+
+# R型指令
+li $t1, 100
+li $t2, 50
+add $t0, $t1, $t2
+
+# 立即数
+addi $t0, $t0, 50
+add $t0, $t0, 50
+
+# 无符号，结果不是负数
+addiu $t0, $t2, -100
+
+# 32位立即数
+addi $t1, $t2, 5647123
+```
+
+### 2.2.3 伪代码
+
+写一些伪代码会让编程者避免陷入复杂的汇编代码中。
+
+示例：
+
+```
+main
+{
+	register int i = input{"Please enter the first value to add: "}
+	register int j = input{"Please enter the second value to add: "}
+	register int k = i + j
+	print("The result is " + k)
+}
+```
+
+### 2.2.4 翻译成汇编
+
+```assembly
+# 程序文件：Program3-2.asm
+# 作者：Charles Kann
+# 用途：伪代码转换成汇编
+
+# 伪代码
+# main
+# {
+# 	register int i = input{"Please enter the first value to add: "}
+# 	register int j = input{"Please enter the second value to add: "}
+# 	register int k = i + j
+# 	print("The result is " + k)
+# }
+
+.text
+.global main
+main:
+	# 寄存器定义
+	# i: $s0
+	# j: $s1
+	# k: $s2
+	# register int i = input{"Please enter the first value to add: "}
+	addi $v0, $zero, 4
+	la $a0, prompt1
+	syscall
+	addi $v0, $zero, 5
+	syscall
+	move $s0, $v0
+	
+	# register int j = input{"Please enter the second value to add: "}
+	addi $v0, $zero, 4
+	la $a0, prompt2
+	syscall
+	addi $v0, $zero, 5
+	syscall
+	move $s1, $v0
+	
+	# register int k = i + j
+	add $s2, $s1, $s0
+	
+	# print("The result is " + k)
+	addi $v0, $zero, 4
+	la $a0, result
+	syscall
+	addi $v0, $zero, 1
+	move $a0, $s2
+	syscall
+	
+	# 程序结束
+	addi $v0, $zero, 10
+	syscall
+.data
+prompt1: .asciiz "Please enter the first value to add: "
+prompt2: .asciiz "Please enter the second value to add: "
+result: .asciiz "The result is "
+```
+
+## 2.3 减法
+
+`sub`, `subu`, `subui`类似于加法，但`subi`并不是真正的指令，是一个伪指令，先将要减去的值加载到$at寄存器中，然后用R指令进行运算。
+
+- `sub`，整数
+  - 格式：`sub Rd, Rs, Rt`
+  - 含义：`Rd <- Rs - Rt`
+- `sub`伪运算符
+  - 格式：`sub Rt, Rs, 立即数`
+  - 含义：`Rt <- Rs - 立即数`
+  - 翻译：
+    - `addi $at, $zero, 立即数`
+    - `sub Rt, Rs, $at`
+- `subi`，伪运算符
+  - 格式：`subi Rt, Rs, 立即数`
+  - 含义：`Rt <- Rs - 立即数`
+  - 翻译：
+    - `addi $at, $zero, 立即数`
+    - `sub Rt, Rs, $at`
+- `subu`，无符号数
+  - 格式：`subu Rd, Rs, Rt`
+  - 含义：`Rd <- Rs - Rt`
+
+- `subiu`，伪运算符
+  - 格式：`subiu Rt, Rs, 立即数`
+  - 含义：`Rt <- Rs - 立即数`
+  - 翻译：
+    - `addi $at, $zero, 立即数`
+    - `subu Rt, Rs, $at`
+
+## 2.4 乘法
+
+先跳一跳
+
+## 2.5 除法
+
+先跳一跳
+
+## 2.6 求解算术表达式
+
+## 2.7 除法与精度
+
+## 2.8 逻辑运算符
+
+MIPS中只实现了位运算符，但被称为逻辑运算符。
+
+- `and`
+
+  - `and`，按位与
+    - 格式：`and Rd, Rs, Rt`
+    - 含义：`Rd <- Rs AND Rt`
+  - `and`，立即数的伪运算符
+    - 格式：`and Rt, Rs, 立即数`
+    - 含义：`Rt <- Rs AND 立即数`
+    - 翻译：`andi Rt, Rs, 立即数`
+
+  - `and`，自身与立即数的伪运算符
+    - 格式：`and Rs, 立即数`
+    - 含义：`Rs <- Rs AND 立即数`
+    - 翻译：`andi Rs, Rs, 立即数`
+
+- `andi`
+  - `andi`，立即数按位与
+    - 格式：`andi Rt, Rs, 立即数`
+    - 含义：`Rt <- Rs AND 立即数`
+  - `andi`，自身与立即数
+    - 格式：`andi Rs, 立即数`
+    - 含义：`Rs <- Rs AND 立即数`
+    - 翻译：`andi Rs, Rs, 立即数`
+- `or`
+  - `or`，按位或
+    - 格式：`or Rd, Rs, Rt`
+    - 含义：`Rd <- Rs OR Rt`
+  - `or`，立即数的伪运算符
+    - 格式：`or Rt, Rs, 立即数`
+    - 含义：`Rt <- Rs OR 立即数`
+    - 翻译：`ori Rt, Rs, 立即数`
+  - `or`，自身与立即数的伪运算符
+    - 格式：`or Rs, 立即数`
+    - 含义：`Rs <- Rs OR 立即数`
+    - 翻译：`ori Rs, Rs, 立即数`
+- `ori`
+  - `ori`，立即数按位或
+    - 格式：`ori Rt, Rs, 立即数`
+    - 含义：`Rt <- Rs OR 立即数`
+  - `ori`，自身与立即数的伪运算符
+    - 格式：`ori Rs, 立即数`
+    - 含义：`Rs <- Rs OR 立即数`
+    - 翻译：`ori Rs, Rs, 立即数`
+- `xor`
+  - `xor`，按位异或
+    - 格式：`xor Rd, Rs, Rt`
+    - 含义：`Rd <- Rs XOR Rt`
+  - 一样
+- `xori`
+  - 一样
+
+## 2.9 逻辑操作符的使用
+
+## 2.10 移位操作符
+
+- `sll`，shift left logical，逻辑左移
+  - 格式：`sll Rd, Rt, shamt`
+  - 含义：`Rd <- Rt << shamt`
+
+# 3 简单的MIPS子程序
+
+有点类似于函数。
+
+## 3.1 退出的子程序
+
+```assembly
+# 程序文件：Program5-1.asm
+# 作者：Charles Kann
+# 用途：实现并调用名为Exit的子程序
+.text
+main:
+	# 从用户那里读取并输入一个值
+	li $v0, 4
+	la $a0, prompt
+	syscall
+	li $v0, 5
+	syscall
+	move $s0, $v0
+	
+	# 打印这个值
+	li $v0, 4
+	la $a0, result
+	syscall
+	li $v0, 1
+	move $a0, $s0
+	syscall
+	
+	# 调用Exit子程序来退出
+	jal Exit
+  
+.data
+	prompt: .asciiz "Please enter an integer: "
+	result: .asciiz "\nYou entered: "
+	
+# 子程序：Exit
+# 作者：Charles Kann
+# 用途：退出程序
+# 输入：None
+# 返回：None
+.text
+Exit:
+	li $v0, 10
+	syscall
+	
+```
+
+## 3.2 打印新行
+
+```assembly
+# 程序文件：Program5-2.asm
+# 作者：Charles Kann
+# 用途：实现并调用名为PrintNewLine的子程序
+.text
+main:
+	# 从用户那里读取并输入一个值
+	li $v0, 4
+	la $a0, prompt
+	syscall
+	li $v0, 5
+	syscall
+	move $s0, $v0
+	
+	# 打印新的一行
+	jal PrintNewLine
+	li $v0, 4
+	la $a0, result
+	syscall
+	li $v0, 1
+	move $a0, $s0
+	syscall
+	
+	# 调用Exit来退出
+	jal Exit
+
+.data
+	prompt: .asciiz "Please enter an integer: "
+	result: .asciiz "\nYou entered: "
+
+# 子程序：PrintNewLine
+# 作者：Charles Kann
+# 用途：向用户控制台输出一个新的行
+# 输入：None
+# 返回：None
+.text
+PrintNewLine:
+	li $v0, 4
+	la $a0, __PNL_newline
+	syscall
+	jr $ra
+.data
+	__PNL_newline: .asciiz "\n"
+
+# 子程序：Exit
+# 作者：Charles Kann
+# 用途：退出程序
+# 输入：None
+# 返回：None
+.text
+Exit:
+	li $v0, 10
+	syscall
+
+```
+
+## 3.3 程序计数器(\$pc)寄存器和调用子程序
+
+程序员不可直接访问。
+
+## 3.4 从子程序返回和\$ra寄存器
+
+## 3.5 带有输入参数的PrintString子程序
+
+需要一个输入参数传递给程序要打印字符串的地址。
+
+```assembly
+# 程序文件：Program5-3.asm
+# 作者：Charles Kann
+# 用途：实现并调用名为PrintString的子程序
+.text
+main:
+	# 从用户那里读取并输入一个值
+	la $a0, prompt
+	jal PrintString
+	li $v0, 5
+	syscall
+	move $s0, $v0
+	
+	# 打印新的一行
+	jal PrintNewLine
+	la $a0, result
+	jal PrintString
+	li $v0, 1
+	move $a0, $s0
+	syscall
+	
+	# 调用Exit来退出
+	jal Exit
+
+.data
+	prompt: .asciiz "Please enter an integer: "
+	result: .asciiz "\nYou entered: "
+
+# 子程序：PrintNewLine
+# 作者：Charles Kann
+# 用途：向用户控制台输出一个新的行
+# 输入：None
+# 返回：None
+.text
+PrintNewLine:
+	li $v0, 4
+	la $a0, __PNL_newline
+	syscall
+	jr $ra
+.data
+	__PNL_newline: .asciiz "\n"
+
+# 子程序：PrintString
+# 作者：Charles Kann
+# 用途：向用户控制台输出一个字符串
+# 输入：$a0
+# 返回：None
+.text
+PrintString:
+	addi $v0, $zero, 4
+	syscall
+	jr $ra
+
+# 子程序：Exit
+# 作者：Charles Kann
+# 用途：退出程序
+# 输入：None
+# 返回：None
+.text
+Exit:
+	li $v0, 10
+	syscall
+
+```
+
+## 3.6 多输入参数的PrintInt子程序
