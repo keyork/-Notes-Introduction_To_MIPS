@@ -1,3 +1,5 @@
+[toc]
+
 # 1 MIPS汇编中的第一个程序
 
 本章介绍MIPS汇编中的Hello World程序，主要是理解寄存器和I/O机制。
