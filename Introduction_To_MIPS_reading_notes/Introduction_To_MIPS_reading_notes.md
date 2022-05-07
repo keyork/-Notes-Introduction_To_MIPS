@@ -799,3 +799,202 @@ Exit:
 
 ## 3.8 创建utils.asm文件
 
+就是把所有的子程序都丢到一个名为utils.asm的文件里，在主程序里用`.include "utils.asm"`调用。
+
+# 4 汇编语言的程序控制结构
+
+主要可以分成三类：顺序执行、分支、循环
+
+## 4.1 关于goto语句
+
+goto可以不受限制地分支到程序中的任何点，但实际问题不在goto，而在程序员。
+
+## 4.2 简单的if语句
+
+### 4.2.1 伪代码
+
+```
+if (num > 0)
+{
+	print("Number is positive")
+}
+```
+
+实际上被省略了一些东西：
+
+```
+boolean flag = num > 0;
+if (flag) ...
+```
+
+### 4.2.2 翻译成汇编
+
+```assembly
+.text
+	# if (num > 0)
+	lw $t0, num
+	sgt $t1, $t0, $zero # $ t1是那个boolean
+	beqz $t1, end_if
+		la $a0, PositiveNumber
+		jal PrintString
+	end_if:
+	jal Exit
+.data
+	num: .word 5
+	PositiveNumber: .asciiz "Number is positive"
+.include "utils.asm"
+```
+
+### 4.2.3 复杂逻辑
+
+举例：`if ((x > 0 && ((x%2) == 0)))`
+
+翻译成汇编：
+
+```assembly
+lw $t0, x
+sgt $t1, $t0, $zero
+rem $t2, $t0, 2
+and $t1, $t1, $t2
+beqz $t1, end_if
+```
+
+## 4.3 if-else语句
+
+伪代码：
+
+```
+if (($s0 > 0) == 0)
+{
+	print("Number is positive")
+}
+else
+{
+	print("Number is negative")
+}
+```
+
+翻译成汇编
+
+```assembly
+.text
+	lw $t0, num
+	sgt $t1, $t0, $zero
+	beqz $t1, else
+		# if block
+		la $a0, PositveNumber
+		jal PrintString
+		b end_if
+		# else block
+	else:
+		la $a0, NegativeNumber
+		jal PrintString
+	end_if:
+	jal Exit
+.data
+	num: .word 5
+	PositiveNumber: .asciiz "Number is positive"
+	NegativeNumber: .asciiz "Number is negative"
+.include "utils.asm"
+```
+
+## 4.4 if-elseif-else语句
+
+伪代码：
+
+```
+if (grade > 100 || grade < 0)
+{
+	print("Grade must be between 0..100")
+}
+elseif (grade >= 60)
+{
+	print("Grade is not F")
+}
+else
+{
+	print("Grade is F")
+}
+```
+
+翻译成汇编
+
+```assembly
+.text
+	# if block
+		lw $s0, num
+		slti $t1, $s0, 0
+		sgt $t2, $s0, 100
+		or $t1, $t1, $t2
+		beqz $t1, grade_nF
+		# 无效输入
+		la $a0, InvalidInput
+		jal PrintString
+		b end_if
+	grade_nF:
+		sge $t1, $s0, 60
+		beqz $t1, else
+		la $a0, OutputnF
+		jal PrintString
+		b end_if
+   else:
+   	la $a0, OutputF
+   	jal PrintString
+   	b end_if
+   end_if:
+   jal Exit
+.data
+	num: .word 70
+	InvalidInput: .asciiz "Number must be > 0 and < 100"
+	OutputnF: .asciiz "Grade is not F"
+	OutputF: .asciiz "Grade is F"
+.include "utils.asm"
+```
+
+## 4.5 循环
+
+while和for两种。
+
+### 4.5.1 while循环
+
+伪代码
+
+```
+int i = prompt("Enter an integer, or -1 to exit")
+while (i != -1)
+{
+	print("You entered " + i);
+	i = prompt("Enter an integer, or -1 to exit")
+}
+```
+
+翻译成汇编
+
+```assembly
+.text
+	# 提示用户输入
+	la $a0, prompt
+	jal PromptInt
+	move $s0, $v0
+	start_loop:
+		sne $t1, $s0, -1
+		beqz $t1, end_loop
+		
+		la $a0, output
+		move $a1, $s0
+		jal PrintInt
+		
+		la $a0, prompt
+		jal PromptInt
+		move $s0, $v0
+		b start_loop
+	end_loop:
+	jal Exit
+.data
+	prompt: .asciiz "\nEnter an integer, -1 to stop: "
+	output: .asciiz "\nYou entered: "
+.include "utils.asm"
+```
+
+## 4.5.2 for循环
+
