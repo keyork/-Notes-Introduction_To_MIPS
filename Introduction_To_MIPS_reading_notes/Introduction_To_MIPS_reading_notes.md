@@ -1000,3 +1000,48 @@ while (i != -1)
 
 ## 4.5.2 for循环
 
+伪代码
+
+```
+n = prompt("enter the value to calculate the sum up to: ")
+total = 0;
+for (i = 0; i < n; i++)
+{
+	total = total + i
+}
+print("Total = " + total);
+```
+
+翻译成汇编
+
+```assembly
+.text
+	la $a0, prompt
+	jal PromptInt
+	move $s1, $v0
+	li $s0, 0
+	li $s2, 0
+	
+	start_loop:
+		sle $t1, $s0, $s1
+		beqz $t1, end_loop
+		
+		# code block
+		add $s2, $s2, $s0
+		
+		addi $s0, $s0, 1
+		b start_loop
+  
+  end_loop:
+  	la $a0, output
+  	move $a1, $s2
+  	jal PrintInt
+  	
+  	jal Exit
+.data
+	prompt: .asciiz "enter the value to calculate the sum up to: "
+	output: .asciiz "The final result is: "
+
+.include "utils.asm"
+```
+
